@@ -75,17 +75,12 @@
     border-radius: 8px;
     cursor: pointer;
     box-shadow: 0 4px 6px rgba(0,0,0,0.25);
-    /* AUMENTADO: Asegura que esté por encima de TODO */
-    z-index: 9999;
+    z-index: 9999; /* Asegura que esté por encima de TODO */
     user-select: none;
   }
   #btnLimpiar:hover {
     background: #ff1493;
   }
-
-  /* ELIMINADO: Se borra completamente el estilo del botón de música */
-  /* #playMusicButton { ... } */
-
 
   #modalPregunta {
     position: fixed;
@@ -257,10 +252,15 @@
   let flores = [];
 
   const backgroundMusic = document.getElementById("backgroundMusic");
-  // ELIMINADO: No hay botón de música, así que estas variables y funciones ya no son necesarias.
-  // const playMusicButton = document.getElementById("playMusicButton");
-  // function tryPlayMusic() { ... }
-  // if (playMusicButton) { ... }
+
+  // Función para intentar reproducir la música
+  function tryPlayMusic() {
+    backgroundMusic.play().then(() => {
+      console.log("Audio reproducido con éxito.");
+    }).catch(error => {
+      console.warn("Error al intentar reproducir el audio (posiblemente bloqueado por el navegador):", error);
+    });
+  }
 
   function crearPetalo(svg, cx, cy, rx, ry, fill, rot) {
     const path = document.createElementNS(ns, "path");
@@ -479,6 +479,7 @@
   let pasoActual = 0;
 
   btnSi.addEventListener("click", () => {
+    tryPlayMusic(); // Intenta reproducir la música al hacer clic en "Sí"
     pasoActual++;
     if(pasoActual < confirmaciones.length) {
       preguntaTexto.textContent = confirmaciones[pasoActual];
@@ -492,16 +493,14 @@
   btnNo.addEventListener("mousemove", moverBoton);
 
   function moverBoton() {
+    tryPlayMusic(); // Intenta reproducir la música al interactuar con el botón "No"
     const contenedor = modal.querySelector("div");
-    // Calcular límites para que el botón no se salga del modal
     const rectContenedor = contenedor.getBoundingClientRect();
     const rectBoton = btnNo.getBoundingClientRect();
 
     let newLeft = Math.random() * (rectContenedor.width - rectBoton.width);
     let newTop = Math.random() * (rectContenedor.height - rectBoton.height);
 
-    // Asegurarse de que el botón se mueva solo dentro del div del modal,
-    // y ajustar su posición relativa al contenedor
     btnNo.style.left = `${newLeft}px`;
     btnNo.style.top = `${newTop}px`;
 
@@ -528,16 +527,12 @@
     crearFiltroSombra();
     crearFlor(window.innerWidth / 2, window.innerHeight / 2);
     animar();
-    // La reproducción automática debería funcionar si hay interacción o si el navegador lo permite
-    backgroundMusic.play().catch(error => {
-        console.warn("Autoplay de audio bloqueado:", error);
-    });
+    // No intentamos reproducir la música aquí, sino con la interacción del modal
   }
 
   window.onload = iniciar;
 
   document.body.addEventListener("click", e => {
-    // Se elimina la condición del botón de música
     if (e.target.id === "btnLimpiar" || e.target.closest("#modalPregunta") || e.target.closest("#modalCarta")) {
         return;
     }
