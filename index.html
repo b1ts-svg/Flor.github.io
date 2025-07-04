@@ -82,7 +82,10 @@
     background: #ff1493;
   }
 
-  /* Nuevo estilo para el contenedor de la pantalla inicial */
+  /* Estilo del nuevo botón de reproducción */
+  /* #playMusicButton movido dentro de initialScreen, su posicionamiento será manejado por flexbox */
+
+
   #initialScreen {
     position: fixed;
     top: 0;
@@ -91,7 +94,7 @@
     height: 100%;
     background: rgba(0,0,0,0.6);
     display: flex;
-    flex-direction: column; /* Para apilar el modal y el botón */
+    flex-direction: column; /* Para apilar el modal y el botón de música */
     align-items: center;
     justify-content: center;
     z-index: 2000;
@@ -121,7 +124,7 @@
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    margin: 0 10px;
+    margin: 0 10px; /* Margen para separar los botones */
     user-select: none;
   }
 
@@ -133,7 +136,9 @@
   #btnNo {
     background: #dc3545;
     color: white;
-    /* transition: none !important; */ /* Mantenemos esto si no queremos transición suave al mover */
+    /* La posición absoluta se aplicará y removerá con JavaScript */
+    /* No se usa position: fixed; ni top/left/transform aquí en CSS */
+    transition: none !important; /* Mantenemos esto si no queremos transición suave al mover */
   }
 
   /* Estilo para el botón de reproducción de música cuando está debajo del modal */
@@ -228,7 +233,10 @@
 </head>
 <body>
 
-<audio id="backgroundMusic" src="Stargirl.MP3" loop></audio>
+<audio id="backgroundMusic" loop>
+    <source src="Stargirl.MP3" type="audio/mpeg">
+    <source src="https://media1.vocaroo.com/mp3/1hD3BZDX3Sbp" type="audio/mpeg"> Tu navegador no soporta el elemento de audio.
+</audio>
 
 <button id="btnLimpiar">🧹 Limpiar Flores</button>
 
@@ -261,7 +269,7 @@
       Mereces lo mejor del mundo.<br>
       Y aunque muchas veces me dije que ese “mejor” debía ser alguien más... hoy en realidad espero convertirme en esa persona (aclaro que no tiene que ser como lo solia decir).<br><br>
       Ojalá, en algún momento, me sientas, notes mi ausencia como yo noto la tuya, no con tristeza, sino con ese sentimiento que tanto te hace notar.<br>
-      Porque a pesar de todo, en el fondo yo espero y sigo deseando encontrarte.<br>
+      Porque a pesar de todo, en el fondo yo espero y sigo deseando encontrarte.<<br>
       No desde donde lo dejamos, sino desde otro lugar, uno más libre, más maduro, más verdadero y poder hablarnos, nadie sabra cuando, donde, o en que momento.<br><br>
       Por eso te pregunto, tu crees que ... ---<br>
       Con cariño,<br>
@@ -280,11 +288,11 @@
 
   const backgroundMusic = document.getElementById("backgroundMusic");
   const playMusicButton = document.getElementById("playMusicButton");
-  const initialScreen = document.getElementById("initialScreen"); // Nuevo elemento
-  let musicStarted = false;
+  const initialScreen = document.getElementById("initialScreen");
+  let musicStarted = false; // Bandera para controlar la reproducción de la música
 
   function tryPlayMusic() {
-    if (!musicStarted) {
+    if (!musicStarted) { // Solo intentar reproducir si no ha iniciado
       backgroundMusic.play().then(() => {
         console.log("Audio reproducido con éxito.");
         musicStarted = true;
@@ -294,7 +302,7 @@
           setTimeout(() => playMusicButton.style.display = "none", 500); // Espera la transición
         }
       }).catch(error => {
-        console.warn("Error al intentar reproducir el audio (posiblemente bloqueado por el navegador):", error);
+        console.warn("Error al intentar reproducir el audio (posiblemente bloqueado por el navegador o fuente no soportada):", error);
         // Si hay un error, asegúrate de que el botón siga visible para que el usuario pueda intentarlo
         if (playMusicButton) {
             playMusicButton.style.opacity = "1";
@@ -550,6 +558,7 @@
 
     // Calcular nuevas posiciones aleatorias dentro de los límites del contenedor del modal
     // Ajustar para que el botón no se salga de los límites.
+    // También asegúrate de que el botón siempre pueda verse dentro del modal.
     let newLeft = Math.random() * (rectContenedor.width - rectBoton.width);
     let newTop = Math.random() * (rectContenedor.height - rectBoton.height);
 
