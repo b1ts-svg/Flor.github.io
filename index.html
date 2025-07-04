@@ -82,6 +82,27 @@
     background: #ff1493;
   }
 
+  /* Nuevo estilo para el botón de reproducción de música */
+  #playMusicButton {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    background: #87ceeb; /* Un azul claro */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.25);
+    z-index: 9998; /* Un poco menos que limpiar, pero aún alto */
+    user-select: none;
+    transition: opacity 0.5s ease-out;
+  }
+  #playMusicButton:hover {
+    background: #6495ed; /* Un azul más oscuro al pasar el ratón */
+  }
+
   #modalPregunta {
     position: fixed;
     top: 0; left: 0;
@@ -128,8 +149,6 @@
   #btnNo {
     background: #dc3545;
     color: white;
-    /* CAMBIO: Se remueve la posición fija y el transform inicial */
-    /* Esto se manejará dinámicamente en JS */
     transition: none !important;
   }
 
@@ -209,6 +228,8 @@
 
 <audio id="backgroundMusic" src="Stargirl.MP3" loop></audio>
 
+<button id="playMusicButton">🎵 Reproducir Música</button>
+
 <button id="btnLimpiar">🧹 Limpiar Flores</button>
 
 <div id="modalPregunta">
@@ -257,17 +278,28 @@
   let flores = [];
 
   const backgroundMusic = document.getElementById("backgroundMusic");
-  let musicStarted = false; // Controla si la música ya se intentó iniciar
+  const playMusicButton = document.getElementById("playMusicButton"); // Nuevo elemento
+  let musicStarted = false; 
 
   function tryPlayMusic() {
     if (!musicStarted) {
       backgroundMusic.play().then(() => {
         console.log("Audio reproducido con éxito.");
         musicStarted = true;
+        // Oculta el botón de reproducción de música una vez que empieza
+        if (playMusicButton) {
+          playMusicButton.style.opacity = "0";
+          setTimeout(() => playMusicButton.style.display = "none", 500); // Espera la transición
+        }
       }).catch(error => {
         console.warn("Error al intentar reproducir el audio (posiblemente bloqueado por el navegador):", error);
       });
     }
+  }
+
+  // Listener para el nuevo botón de música
+  if (playMusicButton) {
+    playMusicButton.addEventListener("click", tryPlayMusic);
   }
 
   function crearPetalo(svg, cx, cy, rx, ry, fill, rot) {
@@ -486,14 +518,18 @@
     "¿Estás pero muy segura de leer la carta?"
   ];
   let pasoActual = 0;
-  let firstInteractionDone = false; // Nuevo: Para controlar la primera interacción
+  let firstModalInteractionDone = false; // Renombrado para claridad
 
-  // Listener para CUALQUIER clic dentro del modal para iniciar la música
+  // CAMBIO: El listener para iniciar la música con interacción del modal se mantiene
+  // Pero ahora también el botón "No" se moverá si se interactúa con él
   modal.addEventListener("click", () => {
-    tryPlayMusic(); // Intenta reproducir la música con la primera interacción en el modal
-    if (!firstInteractionDone) {
-      firstInteractionDone = true;
-      // Solo después de la primera interacción, añadimos los listeners de movimiento al botón "No"
+    // Si la música no ha iniciado y no es un clic en el botón de música
+    if (!musicStarted) { // Ya no es necesario el check de !firstModalInteractionDone aquí
+      tryPlayMusic();
+    }
+    // Si es la primera interacción con el modal, activa el movimiento del botón "No"
+    if (!firstModalInteractionDone) {
+      firstModalInteractionDone = true;
       btnNo.addEventListener("mouseenter", moverBoton);
       btnNo.addEventListener("mousemove", moverBoton);
     }
@@ -510,26 +546,23 @@
     }
   });
 
-  // La lógica de moverBoton se mantiene, pero solo se activa DESPUÉS de la primera interacción
+  // La lógica de moverBoton se mantiene
   function moverBoton() {
-    const contenedor = modal.querySelector("div"); // El div interno del modal
-    
-    // Para que el botón se mueva dentro del modal, necesitamos ajustar su estilo 'position' a 'absolute'
-    // y el contenedor del modal.querySelector('div') debe tener 'position: relative'
-    // Ya lo tiene 'position: relative', lo que es perfecto.
+    const contenedor = modal.querySelector("div");
     btnNo.style.position = "absolute"; 
 
-    // Calcular límites para que el botón no se salga del modal
     const rectContenedor = contenedor.getBoundingClientRect();
     const rectBoton = btnNo.getBoundingClientRect();
 
-    // Calculamos las posiciones aleatorias dentro del contenedor del modal.
-    // Restamos el tamaño del botón para que no se salga por la derecha o abajo.
     let newLeft = Math.random() * (rectContenedor.width - rectBoton.width);
     let newTop = Math.random() * (rectContenedor.height - rectBoton.height);
 
-    // Ajustamos la posición relativa al padre (el div del modal)
-    // Para esto, el `left` y `top` del botón se calculan desde el borde del `contenedor`.
+    // Asegurarse de que el botón se mueva dentro del `div` del modal, no del `modalBotones`
+    // y que sus posiciones sean relativas a ese `div`
+    // Convertimos las coordenadas absolutas del botón a relativas al contenedor
+    newLeft = newLeft - (rectBoton.left - rectContenedor.left);
+    newTop = newTop - (rectBoton.top - rectContenedor.top);
+
     btnNo.style.left = `${newLeft}px`;
     btnNo.style.top = `${newTop}px`;
 
@@ -557,7 +590,7 @@
     // Se eliminan los listeners de movimiento del botón "No" para la próxima vez
     btnNo.removeEventListener("mouseenter", moverBoton);
     btnNo.removeEventListener("mousemove", moverBoton);
-    firstInteractionDone = false; // Resetear el estado de primera interacción
+    firstModalInteractionDone = false; // Resetear el estado de primera interacción
 
     pasoActual = 0;
     preguntaTexto.textContent = confirmaciones[0];
@@ -573,7 +606,7 @@
   window.onload = iniciar;
 
   document.body.addEventListener("click", e => {
-    if (e.target.id === "btnLimpiar" || e.target.closest("#modalPregunta") || e.target.closest("#modalCarta")) {
+    if (e.target.id === "btnLimpiar" || e.target.id === "playMusicButton" || e.target.closest("#modalPregunta") || e.target.closest("#modalCarta")) {
         return;
     }
     crearFlor(e.clientX, e.clientY);
