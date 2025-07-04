@@ -75,28 +75,47 @@
     border-radius: 8px;
     cursor: pointer;
     box-shadow: 0 4px 6px rgba(0,0,0,0.25);
-    z-index: 9999;
+    z-index: 1000;
     user-select: none;
   }
   #btnLimpiar:hover {
     background: #ff1493;
   }
 
-  #initialScreen {
+  /* Estilo del nuevo botón de reproducción */
+  #playMusicButton {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.6);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
+    top: 15px;
+    left: 15px;
+    background-color: #4CAF50; /* Verde */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.25);
+    /* ¡IMPORTANTE! Z-index más alto que cualquier modal */
+    z-index: 2001; /* Asegura que esté por encima del modal de pregunta (z-index: 2000) */
+    user-select: none;
+  }
+  #playMusicButton:hover {
+    background-color: #45a049;
   }
 
+
   #modalPregunta {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000; /* Z-index para el modal de pregunta */
+  }
+
+  #modalPregunta > div {
     background: white;
     padding: 30px;
     border-radius: 12px;
@@ -105,13 +124,6 @@
     position: relative;
     width: 300px;
     max-width: 90vw;
-    margin-bottom: 20px;
-  }
-
-  #modalBotones {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
   }
 
   #btnSi, #btnNo {
@@ -120,7 +132,7 @@
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    margin: 0 10px;
+    margin: 10px;
     user-select: none;
   }
 
@@ -132,24 +144,12 @@
   #btnNo {
     background: #dc3545;
     color: white;
-    transition: none !important;
-  }
-
-  #playMusicButton {
-    background: #87ceeb;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    font-size: 16px;
-    border-radius: 8px;
     cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.25);
-    z-index: 2001;
-    user-select: none;
-    transition: opacity 0.5s ease-out;
-  }
-  #playMusicButton:hover {
-    background: #6495ed;
+    position: fixed; /* para mover libremente */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: none !important;
   }
 
   #mensajeRevelado {
@@ -181,6 +181,7 @@
     animation: sacudir 0.4s ease;
   }
 
+  /* Estilo carta modal */
   #modalCarta {
     position: fixed;
     top: 0; left: 0;
@@ -189,7 +190,7 @@
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 3000;
+    z-index: 3000; /* Z-index para el modal de la carta */
     overflow-y: auto;
     padding: 20px;
   }
@@ -225,19 +226,18 @@
 </head>
 <body>
 
-<audio id="backgroundMusic" src="Stargirl.MP3" loop></audio>
+<audio id="backgroundMusic" src="https://media1.vocaroo.com/mp3/1hD3BZDX3Sbp" loop autoplay></audio>
+<audio id="backgroundMusic" src="Stargirl.MP3" loop autoplay></audio>
 
+<button id="playMusicButton">Reproducir Música</button>
 <button id="btnLimpiar">🧹 Limpiar Flores</button>
 
-<div id="initialScreen">
-  <div id="modalPregunta">
+<div id="modalPregunta">
+  <div>
     <h2 id="preguntaTexto">¿Quieres leer el mensaje?</h2>
-    <div id="modalBotones">
-      <button id="btnSi">Sí</button>
-      <button id="btnNo">No</button>
-    </div>
+    <button id="btnSi">Sí</button>
+    <button id="btnNo">No</button>
   </div>
-  <button id="playMusicButton">🎵 Reproducir Música</button>
 </div>
 
 <div id="mensajeRevelado">Te quiero 💖</div>
@@ -276,27 +276,28 @@
   let flores = [];
 
   const backgroundMusic = document.getElementById("backgroundMusic");
-  const playMusicButton = document.getElementById("playMusicButton");
-  const initialScreen = document.getElementById("initialScreen");
-  let musicStarted = false;
+  const playMusicButton = document.getElementById("playMusicButton"); // Referencia al nuevo botón
 
+  // Función para intentar reproducir la música
   function tryPlayMusic() {
-    if (!musicStarted) {
-      backgroundMusic.play().then(() => {
-        console.log("Audio reproducido con éxito.");
-        musicStarted = true;
-        if (playMusicButton) {
-          playMusicButton.style.opacity = "0";
-          setTimeout(() => playMusicButton.style.display = "none", 500);
-        }
-      }).catch(error => {
-        console.warn("Error al intentar reproducir el audio (posiblemente bloqueado por el navegador):", error);
-      });
-    }
+    backgroundMusic.play().then(() => {
+      console.log("Audio reproducido con éxito.");
+      if (playMusicButton) {
+        playMusicButton.style.display = 'none'; // Oculta el botón si la reproducción es exitosa
+      }
+    }).catch(error => {
+      console.log("Error al intentar reproducir el audio:", error);
+      if (playMusicButton) {
+        playMusicButton.style.display = 'block'; // Asegura que el botón sea visible si falla el autoplay
+      }
+    });
   }
 
+  // Event listener para el nuevo botón de reproducción
   if (playMusicButton) {
-    playMusicButton.addEventListener("click", tryPlayMusic);
+    playMusicButton.addEventListener("click", () => {
+      tryPlayMusic();
+    });
   }
 
   function crearPetalo(svg, cx, cy, rx, ry, fill, rot) {
@@ -502,12 +503,12 @@
   const modal = document.getElementById("modalPregunta");
   const btnSi = document.getElementById("btnSi");
   const btnNo = document.getElementById("btnNo");
-  const modalBotones = document.getElementById("modalBotones");
   const mensaje = document.getElementById("mensajeRevelado");
   const modalCarta = document.getElementById("modalCarta");
   const cerrarCartaBtn = modalCarta.querySelector(".cerrarCarta");
   const preguntaTexto = document.getElementById("preguntaTexto");
 
+  // Estados de confirmacion (los textos que quieres mostrar paso a paso)
   const confirmaciones = [
     "¿Quieres leer el mensaje?",
     "¿Estás segura?",
@@ -516,41 +517,34 @@
   ];
   let pasoActual = 0;
 
-  // Los listeners para el movimiento del botón "No" se activan siempre
-  btnNo.addEventListener("mouseenter", moverBoton);
-  btnNo.addEventListener("mousemove", moverBoton);
-
-  // El listener del modal ya no necesita iniciar la música
-  modal.addEventListener("click", () => {
-    // No hace nada para la música aquí, ya que el botón de música la maneja
-  });
-
   btnSi.addEventListener("click", () => {
     pasoActual++;
     if(pasoActual < confirmaciones.length) {
       preguntaTexto.textContent = confirmaciones[pasoActual];
     } else {
-      initialScreen.style.display = "none";
+      // Se terminó el ciclo de confirmaciones, mostrar la carta
+      modal.style.display = "none";
       modalCarta.style.display = "flex";
+      // La música ya no se intenta reproducir aquí, la maneja el botón "Reproducir Música"
     }
   });
 
+  btnNo.addEventListener("mouseenter", moverBoton);
+  btnNo.addEventListener("mousemove", moverBoton);
+
   function moverBoton() {
     const contenedor = modal.querySelector("div");
+    const maxX = contenedor.clientWidth - btnNo.offsetWidth;
+    const maxY = contenedor.clientHeight - btnNo.offsetHeight;
     btnNo.style.position = "absolute";
+    btnNo.style.left = Math.random() * maxX + "px";
+    btnNo.style.top = Math.random() * maxY + "px";
 
-    const rectContenedor = contenedor.getBoundingClientRect();
-    const rectBoton = btnNo.getBoundingClientRect();
-
-    let newLeft = Math.random() * (rectContenedor.width - rectBoton.width);
-    let newTop = Math.random() * (rectContenedor.height - rectBoton.height);
-
-    btnNo.style.left = `${newLeft}px`;
-    btnNo.style.top = `${newTop}px`;
-
+    // Sacudir el botón para que sea más evidente
     btnNo.classList.add("sacudir");
     setTimeout(() => btnNo.classList.remove("sacudir"), 400);
 
+    // Crear entre 3 y 6 flores aleatorias en pantalla
     const cantidad = 3 + Math.floor(Math.random() * 4);
     for (let i = 0; i < cantidad; i++) {
       const x = Math.random() * window.innerWidth;
@@ -561,40 +555,31 @@
 
   cerrarCartaBtn.addEventListener("click", () => {
     modalCarta.style.display = "none";
+    // Pausar la música si se cierra la carta
     backgroundMusic.pause();
-    musicStarted = false;
-
-    // Restaurar el botón "No" a su posición original
-    btnNo.style.position = "";
-    btnNo.style.left = "";
-    btnNo.style.top = "";
-
+    // Asegurarse de que el botón de música sea visible de nuevo
+    if (playMusicButton) {
+        playMusicButton.style.display = 'block';
+    }
+    // Opcional: reiniciar confirmacion para que pueda repetir si quiere
     pasoActual = 0;
     preguntaTexto.textContent = confirmaciones[0];
-    initialScreen.style.display = "flex";
-    playMusicButton.style.display = "block";
-    playMusicButton.style.opacity = "1";
+    modal.style.display = "flex";
   });
 
   function iniciar() {
     crearFiltroSombra();
     crearFlor(window.innerWidth / 2, window.innerHeight / 2);
     animar();
+    // La música NO se intenta reproducir al inicio. El usuario debe hacer clic en el botón.
   }
 
   window.onload = iniciar;
 
   document.body.addEventListener("click", e => {
-    // Si la pantalla inicial está visible, solo crea flores si el clic no es en un elemento del modal o el botón de música
-    if (initialScreen.style.display !== "none" && (e.target.closest("#initialScreen") || e.target.id === "btnLimpiar")) {
-        return;
-    }
-    // Si la pantalla inicial no está visible (es decir, ya se cerró), crea flores en cualquier clic excepto el botón de limpiar
-    if (initialScreen.style.display === "none" && e.target.id !== "btnLimpiar") {
-        crearFlor(e.clientX, e.clientY);
-    }
+    if (e.target.id === "btnLimpiar" || e.target.closest("#modalPregunta") || e.target.closest("#modalCarta") || e.target.id === "playMusicButton") return;
+    crearFlor(e.clientX, e.clientY);
   });
-
 
   window.addEventListener("resize", () => {
     flores.forEach(flor => {
@@ -609,6 +594,9 @@
     });
   });
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
