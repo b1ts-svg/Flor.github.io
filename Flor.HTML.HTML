@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>🌸 Flores Interactivas Responsivas</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    overflow: hidden;
+    background: linear-gradient(to bottom, #fff0f5, #ffe6f0);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    user-select: none;
+  }
+  svg {
+    position: absolute;
+    pointer-events: none;
+    transform-origin: 50% 50%;
+    animation: girar 25s linear infinite;
+    transition: transform 1.5s ease-in, opacity 1.5s ease-in;
+    will-change: transform;
+    filter: drop-shadow(0 0 3px #ff69b4aa);
+  }
+  .flor {
+    pointer-events: auto;
+    cursor: pointer;
+    animation: crecerBrillo 0.8s ease forwards;
+    will-change: transform, opacity, filter;
+    width: 12vw;
+    height: 12vw;
+    max-width: 100px;
+    max-height: 100px;
+  }
+  .particula {
+    position: absolute;
+    pointer-events: none;
+    border-radius: 50%;
+    background: #ffd700cc;
+    box-shadow: 0 0 4px 1.5px #ffdd55bb;
+    opacity: 0.6;
+    will-change: transform, opacity;
+    width: 0.5vw;
+    height: 0.5vw;
+    max-width: 6px;
+    max-height: 6px;
+  }
+  @keyframes crecerBrillo {
+    0% {
+      transform: scale(0.5);
+      opacity: 0;
+      filter: drop-shadow(0 0 0 #fff);
+    }
+    50% {
+      filter: drop-shadow(0 0 8px #ff69b4cc);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+      filter: drop-shadow(0 0 4px #ff69b4aa);
+    }
+  }
+  @keyframes girar {
+    0% { transform: rotate(0deg);}
+    100% { transform: rotate(360deg);}
+  }
+  #btnLimpiar {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    background: #ff69b4;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.25);
+    z-index: 1000;
+    user-select: none;
+  }
+  #btnLimpiar:hover {
+    background: #ff1493;
+  }
+
+  /* Estilo del nuevo botón de reproducción */
+  #playMusicButton {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    background-color: #4CAF50; /* Verde */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.25);
+    /* ¡IMPORTANTE! Z-index más alto que cualquier modal */
+    z-index: 2001; /* Asegura que esté por encima del modal de pregunta (z-index: 2000) */
+    user-select: none;
+  }
+  #playMusicButton:hover {
+    background-color: #45a049;
+  }
+
+
+  #modalPregunta {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000; /* Z-index para el modal de pregunta */
+  }
+
+  #modalPregunta > div {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    position: relative;
+    width: 300px;
+    max-width: 90vw;
+  }
+
+  #btnSi, #btnNo {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin: 10px;
+    user-select: none;
+  }
+
+  #btnSi {
+    background: #28a745;
+    color: white;
+  }
+
+  #btnNo {
+    background: #dc3545;
+    color: white;
+    cursor: pointer;
+    position: fixed; /* para mover libremente */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: none !important;
+  }
+
+  #mensajeRevelado {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    color: #ff1493;
+    z-index: 1500;
+    display: none;
+    background: rgba(255,255,255,0.9);
+    padding: 20px 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    user-select: none;
+  }
+
+  @keyframes sacudir {
+    0% { transform: translate(0, 0); }
+    20% { transform: translate(-5px, 5px); }
+    40% { transform: translate(5px, -5px); }
+    60% { transform: translate(-5px, -5px); }
+    80% { transform: translate(5px, 5px); }
+    100% { transform: translate(0, 0); }
+  }
+
+  .sacudir {
+    animation: sacudir 0.4s ease;
+  }
+
+  /* Estilo carta modal */
+  #modalCarta {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.75);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000; /* Z-index para el modal de la carta */
+    overflow-y: auto;
+    padding: 20px;
+  }
+  #modalCarta > div {
+    background: white;
+    padding: 30px 40px;
+    border-radius: 15px;
+    max-width: 600px;
+    width: 90vw;
+    max-height: 80vh;
+    overflow-y: auto;
+    font-size: 1.1rem;
+    line-height: 1.5;
+    color: #333;
+    box-shadow: 0 6px 25px rgba(255, 20, 147, 0.3);
+    position: relative;
+  }
+  #modalCarta button.cerrarCarta {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #ff1493;
+    border: none;
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+</style>
+</head>
+<body>
+
+<audio id="backgroundMusic" src="https://media1.vocaroo.com/mp3/1hD3BZDX3Sbp" loop autoplay></audio>
+
+<button id="playMusicButton">Reproducir Música</button>
+<button id="btnLimpiar">🧹 Limpiar Flores</button>
+
+<div id="modalPregunta">
+  <div>
+    <h2 id="preguntaTexto">¿Quieres leer el mensaje?</h2>
+    <button id="btnSi">Sí</button>
+    <button id="btnNo">No</button>
+  </div>
+</div>
+
+<div id="mensajeRevelado">Te quiero 💖</div>
+
+<div id="modalCarta" role="dialog" aria-modal="true" aria-labelledby="tituloCarta">
+  <div>
+    <button class="cerrarCarta" aria-label="Cerrar carta">×</button>
+    <h2 id="tituloCarta">--> ...¿Se terminó o solo es un gran respiro?<br></h2>
+    <p>
+      Hannia.<br><br>
+      Sé que no hemos hablado, no fui la persona, que el contacto ha sido limitado, pero el sentimiento no ha cambiado, siento que se ha transformado, se ha hecho más claro, más profundo.<br>
+      Esto no es solo un mensaje, es una forma de decirte que sigo aquí, con cariño, sintiendo un ambiente tranquilo.<br>
+      "Te quiero tanto, que aprendí a amarte desde lejos, mientras mis manos aún ansían tocarte."<br><br>
+      Han sido días extraños, llenos de reflexión, me he dedicado a mí, a conocerme mejor, a mirar hacia dentro y creeme ha sido maravilloso.<br>
+      He descubierto partes de mí que tenía olvidadas, entendido errores, abrazando virtudes, reconstruido sueños y metas.<br>
+      Y aunque esta distancia ha dolido, también ha sido lo más sano que hemos hecho, por eso te escribo desde el respeto, desde la calma, y poder expresarme de la manera que he aprendido.<br>
+      Ya no te extraño como antes, no desde el apego que llegue a mostrar, sino desde la admiración, te pienso y deseo que estés bien, que brilles como siempre.<br>
+      Mereces lo mejor del mundo.<br>
+      Y aunque muchas veces me dije que ese “mejor” debía ser alguien más... hoy en realidad espero convertirme en esa persona (aclaro que no tiene que ser como lo solia decir).<br><br>
+      Ojalá, en algún momento, me sientas, notes mi ausencia como yo noto la tuya, no con tristeza, sino con ese sentimiento que tanto te hace notar.<br>
+      Porque a pesar de todo, en el fondo yo espero y sigo deseando encontrarte.<br>
+      No desde donde lo dejamos, sino desde otro lugar, uno más libre, más maduro, más verdadero y poder hablarnos, nadie sabra cuando, donde, o en que momento.<br><br>
+      Por eso te pregunto, tu crees que ... ---<br>
+      Con cariño,<br>
+      Alan.
+    </p>
+  </div>
+</div>
+
+<script>
+  const ns = "http://www.w3.org/2000/svg";
+  const PARTICULAS_POR_FLOR = 12;
+  const PARTICULA_SIZE_VW = 0.5;
+  const REACCION_DISTANCIA_VW = 15;
+
+  let flores = [];
+
+  const backgroundMusic = document.getElementById("backgroundMusic");
+  const playMusicButton = document.getElementById("playMusicButton"); // Referencia al nuevo botón
+
+  // Función para intentar reproducir la música
+  function tryPlayMusic() {
+    backgroundMusic.play().then(() => {
+      console.log("Audio reproducido con éxito.");
+      if (playMusicButton) {
+        playMusicButton.style.display = 'none'; // Oculta el botón si la reproducción es exitosa
+      }
+    }).catch(error => {
+      console.log("Error al intentar reproducir el audio:", error);
+      if (playMusicButton) {
+        playMusicButton.style.display = 'block'; // Asegura que el botón sea visible si falla el autoplay
+      }
+    });
+  }
+
+  // Event listener para el nuevo botón de reproducción
+  if (playMusicButton) {
+    playMusicButton.addEventListener("click", () => {
+      tryPlayMusic();
+    });
+  }
+
+  function crearPetalo(svg, cx, cy, rx, ry, fill, rot) {
+    const path = document.createElementNS(ns, "path");
+    const d = `
+      M ${cx} ${cy}
+      C ${cx + rx/2} ${cy - ry/2}, ${cx + rx} ${cy + ry/3}, ${cx} ${cy + ry}
+      C ${cx - rx} ${cy + ry/3}, ${cx - rx/2} ${cy - ry/2}, ${cx} ${cy}
+      Z
+    `;
+    path.setAttribute("d", d);
+    path.setAttribute("fill", fill);
+    path.setAttribute("transform", `rotate(${rot} 50 50)`);
+    svg.appendChild(path);
+  }
+
+  function florRosa(svg) {
+    const petalColors = ["rgba(219,112,147,0.8)", "rgba(199,21,133,0.85)", "rgba(219,112,147,0.7)", "rgba(208,32,144,0.9)"];
+    for (let i = 0; i < 8; i++) {
+      crearPetalo(svg, 50, 30, 12, 35, petalColors[i % petalColors.length], i * 45);
+    }
+    const centro = document.createElementNS(ns, "circle");
+    centro.setAttribute("cx", 50);
+    centro.setAttribute("cy", 50);
+    centro.setAttribute("r", 13);
+    centro.setAttribute("fill", "gold");
+    centro.setAttribute("filter", "url(#sombraCentro)");
+    svg.appendChild(centro);
+  }
+
+  function florGirasol(svg) {
+    for (let i = 0; i < 12; i++) {
+      crearPetalo(svg, 50, 25, 6, 25, "#ffda44", i * 30);
+    }
+    const centro = document.createElementNS(ns, "circle");
+    centro.setAttribute("cx", 50);
+    centro.setAttribute("cy", 50);
+    centro.setAttribute("r", 15);
+    centro.setAttribute("fill", "#8b4513");
+    svg.appendChild(centro);
+  }
+
+  function florPastelAzul(svg) {
+    const colores = ["#a3c9f1", "#7fb0f7", "#9fc4f8"];
+    for(let i=0; i<10; i++) {
+      crearPetalo(svg, 50, 35, 10, 28, colores[i % colores.length], i * 36);
+    }
+    const centro = document.createElementNS(ns, "circle");
+    centro.setAttribute("cx", 50);
+    centro.setAttribute("cy", 50);
+    centro.setAttribute("r", 12);
+    centro.setAttribute("fill", "#bdd7f5");
+    svg.appendChild(centro);
+  }
+
+  function florPastelLavanda(svg) {
+    const colores = ["#c3a0f7", "#b27ff7", "#d1b3fa"];
+    for(let i=0; i<10; i++) {
+      crearPetalo(svg, 50, 35, 10, 28, colores[i % colores.length], i * 36);
+    }
+    const centro = document.createElementNS(ns, "circle");
+    centro.setAttribute("cx", 50);
+    centro.setAttribute("cy", 50);
+    centro.setAttribute("r", 12);
+    centro.setAttribute("fill", "#d8c4f8");
+    svg.appendChild(centro);
+  }
+
+  const tiposFlores = [florRosa, florGirasol, florPastelAzul, florPastelLavanda];
+
+  function crearFiltroSombra() {
+    if (document.getElementById("filtroSombra")) return;
+    const defs = document.createElementNS(ns, "defs");
+    defs.setAttribute("id", "filtroSombra");
+    const filter = document.createElementNS(ns, "filter");
+    filter.setAttribute("id", "sombraCentro");
+    const feDropShadow = document.createElementNS(ns, "feDropShadow");
+    feDropShadow.setAttribute("dx", "0");
+    feDropShadow.setAttribute("dy", "0");
+    feDropShadow.setAttribute("stdDeviation", "2");
+    feDropShadow.setAttribute("flood-color", "rgba(0,0,0,0.2)");
+    filter.appendChild(feDropShadow);
+    defs.appendChild(filter);
+    document.body.appendChild(defs);
+  }
+
+  function vwAPx(vw) {
+    return window.innerWidth * (vw / 100);
+  }
+
+  function crearFlor(x, y) {
+    crearFiltroSombra();
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("class", "flor");
+    svg.setAttribute("width", "100");
+    svg.setAttribute("height", "100");
+    svg.style.left = `${x}px`;
+    svg.style.top = `${y}px`;
+    svg.style.position = "absolute";
+
+    const florFunc = tiposFlores[Math.floor(Math.random() * tiposFlores.length)];
+    florFunc(svg);
+
+    const florObj = {
+      elem: svg,
+      x, y,
+      particulas: [],
+      offsetX: 0,
+      offsetY: 0,
+    };
+
+    for(let i = 0; i < PARTICULAS_POR_FLOR; i++) {
+      const part = document.createElement("div");
+      part.classList.add("particula");
+      const angle = Math.random() * 2 * Math.PI;
+      const radiusPX = vwAPx(3 + Math.random() * 4);
+      part.style.left = `${x + Math.cos(angle) * radiusPX}px`;
+      part.style.top = `${y + Math.sin(angle) * radiusPX}px`;
+      part.style.width = part.style.height = `${PARTICULA_SIZE_VW}vw`;
+      document.body.appendChild(part);
+      florObj.particulas.push({
+        elem: part,
+        angle,
+        radius: radiusPX,
+        baseX: x,
+        baseY: y,
+        speed: 0.004 + Math.random()*0.006
+      });
+    }
+
+    svg.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const numNuevas = 15 + Math.floor(Math.random() * 15);
+      for (let i = 0; i < numNuevas; i++) {
+        const marginPX = vwAPx(10);
+        const dx = marginPX + Math.random() * (window.innerWidth - 2 * marginPX);
+        const dy = marginPX + Math.random() * (window.innerHeight - 2 * marginPX);
+        crearFlor(dx, dy);
+      }
+      svg.style.transform += " translateY(300px) rotate(90deg) scale(0)";
+      svg.style.opacity = "0";
+      florObj.particulas.forEach(p => p.elem.remove());
+      setTimeout(() => {
+        svg.remove();
+        flores = flores.filter(f => f !== florObj);
+      }, 1500);
+    });
+
+    document.body.appendChild(svg);
+    flores.push(florObj);
+  }
+
+  let mouseX = -1000;
+  let mouseY = -1000;
+
+  window.addEventListener("mousemove", e => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  function animar() {
+    flores.forEach(flor => {
+      const dx = mouseX - flor.x;
+      const dy = mouseY - flor.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const maxDist = vwAPx(REACCION_DISTANCIA_VW);
+      if(dist < maxDist) {
+        const fuerza = (maxDist - dist) / maxDist * 10;
+        flor.offsetX += (dx/dist) * fuerza * 0.1;
+        flor.offsetY += (dy/dist) * fuerza * 0.1;
+      } else {
+        flor.offsetX += (0 - flor.offsetX) * 0.05;
+        flor.offsetY += (0 - flor.offsetY) * 0.05;
+      }
+      flor.offsetX = Math.max(-15, Math.min(15, flor.offsetX));
+      flor.offsetY = Math.max(-15, Math.min(15, flor.offsetY));
+      flor.elem.style.transform = `translate(${flor.offsetX}px, ${flor.offsetY}px) rotate(${(performance.now()/50)%360}deg) scale(1)`;
+      flor.particulas.forEach(p => {
+        p.angle += p.speed;
+        const px = flor.x + Math.cos(p.angle) * p.radius + flor.offsetX;
+        const py = flor.y + Math.sin(p.angle) * p.radius + flor.offsetY;
+        p.elem.style.left = `${px - vwAPx(PARTICULA_SIZE_VW)/2}px`;
+        p.elem.style.top = `${py - vwAPx(PARTICULA_SIZE_VW)/2}px`;
+        p.elem.style.opacity = 0.5 + 0.4 * Math.sin(p.angle * 10);
+      });
+    });
+    requestAnimationFrame(animar);
+  }
+
+  function limpiarFlores() {
+    flores.forEach(flor => {
+      flor.particulas.forEach(p => p.elem.remove());
+      flor.elem.remove();
+    });
+    flores = [];
+    crearFlor(window.innerWidth / 2, window.innerHeight / 2);
+  }
+
+  document.getElementById("btnLimpiar").onclick = limpiarFlores;
+
+  // MODAL INTERACTIVO
+
+  const modal = document.getElementById("modalPregunta");
+  const btnSi = document.getElementById("btnSi");
+  const btnNo = document.getElementById("btnNo");
+  const mensaje = document.getElementById("mensajeRevelado");
+  const modalCarta = document.getElementById("modalCarta");
+  const cerrarCartaBtn = modalCarta.querySelector(".cerrarCarta");
+  const preguntaTexto = document.getElementById("preguntaTexto");
+
+  // Estados de confirmacion (los textos que quieres mostrar paso a paso)
+  const confirmaciones = [
+    "¿Quieres leer el mensaje?",
+    "¿Estás segura?",
+    "¿Muy muy segura?",
+    "¿Estás pero muy segura de leer la carta?"
+  ];
+  let pasoActual = 0;
+
+  btnSi.addEventListener("click", () => {
+    pasoActual++;
+    if(pasoActual < confirmaciones.length) {
+      preguntaTexto.textContent = confirmaciones[pasoActual];
+    } else {
+      // Se terminó el ciclo de confirmaciones, mostrar la carta
+      modal.style.display = "none";
+      modalCarta.style.display = "flex";
+      // La música ya no se intenta reproducir aquí, la maneja el botón "Reproducir Música"
+    }
+  });
+
+  btnNo.addEventListener("mouseenter", moverBoton);
+  btnNo.addEventListener("mousemove", moverBoton);
+
+  function moverBoton() {
+    const contenedor = modal.querySelector("div");
+    const maxX = contenedor.clientWidth - btnNo.offsetWidth;
+    const maxY = contenedor.clientHeight - btnNo.offsetHeight;
+    btnNo.style.position = "absolute";
+    btnNo.style.left = Math.random() * maxX + "px";
+    btnNo.style.top = Math.random() * maxY + "px";
+
+    // Sacudir el botón para que sea más evidente
+    btnNo.classList.add("sacudir");
+    setTimeout(() => btnNo.classList.remove("sacudir"), 400);
+
+    // Crear entre 3 y 6 flores aleatorias en pantalla
+    const cantidad = 3 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < cantidad; i++) {
+      const x = Math.random() * window.innerWidth;
+      const y = Math.random() * window.innerHeight;
+      crearFlor(x, y);
+    }
+  }
+
+  cerrarCartaBtn.addEventListener("click", () => {
+    modalCarta.style.display = "none";
+    // Pausar la música si se cierra la carta
+    backgroundMusic.pause();
+    // Asegurarse de que el botón de música sea visible de nuevo
+    if (playMusicButton) {
+        playMusicButton.style.display = 'block';
+    }
+    // Opcional: reiniciar confirmacion para que pueda repetir si quiere
+    pasoActual = 0;
+    preguntaTexto.textContent = confirmaciones[0];
+    modal.style.display = "flex";
+  });
+
+  function iniciar() {
+    crearFiltroSombra();
+    crearFlor(window.innerWidth / 2, window.innerHeight / 2);
+    animar();
+    // La música NO se intenta reproducir al inicio. El usuario debe hacer clic en el botón.
+  }
+
+  window.onload = iniciar;
+
+  document.body.addEventListener("click", e => {
+    if (e.target.id === "btnLimpiar" || e.target.closest("#modalPregunta") || e.target.closest("#modalCarta") || e.target.id === "playMusicButton") return;
+    crearFlor(e.clientX, e.clientY);
+  });
+
+  window.addEventListener("resize", () => {
+    flores.forEach(flor => {
+      if(flor.x > window.innerWidth) flor.x = window.innerWidth - 100;
+      if(flor.y > window.innerHeight) flor.y = window.innerHeight - 100;
+      flor.elem.style.left = `${flor.x}px`;
+      flor.elem.style.top = `${flor.y}px`;
+      flor.particulas.forEach(p => {
+        p.baseX = flor.x;
+        p.baseY = flor.y;
+      });
+    });
+  });
+</script>
+
+</body>
+</html>
