@@ -75,19 +75,20 @@
     border-radius: 8px;
     cursor: pointer;
     box-shadow: 0 4px 6px rgba(0,0,0,0.25);
-    z-index: 1000;
+    /* CAMBIO: Z-index más alto para asegurar visibilidad */
+    z-index: 2001; 
     user-select: none;
   }
   #btnLimpiar:hover {
     background: #ff1493;
   }
 
-  /* Estilo del nuevo botón de reproducción */
-  #playMusicButton {
+  /* CAMBIO: Se eliminan los estilos del botón de música, ya no es necesario */
+  /* #playMusicButton {
     position: fixed;
     top: 15px;
     left: 15px;
-    background-color: #4CAF50; /* Verde */
+    background-color: #4CAF50;
     color: white;
     border: none;
     padding: 10px 15px;
@@ -95,13 +96,12 @@
     border-radius: 8px;
     cursor: pointer;
     box-shadow: 0 4px 6px rgba(0,0,0,0.25);
-    /* ¡IMPORTANTE! Z-index más alto que cualquier modal */
-    z-index: 2001; /* Asegura que esté por encima del modal de pregunta (z-index: 2000) */
+    z-index: 2001;
     user-select: none;
   }
   #playMusicButton:hover {
     background-color: #45a049;
-  }
+  } */
 
 
   #modalPregunta {
@@ -112,7 +112,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 2000; /* Z-index para el modal de pregunta */
+    z-index: 2000;
   }
 
   #modalPregunta > div {
@@ -190,7 +190,7 @@
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 3000; /* Z-index para el modal de la carta */
+    z-index: 3000;
     overflow-y: auto;
     padding: 20px;
   }
@@ -228,7 +228,6 @@
 
 <audio id="backgroundMusic" src="Stargirl.MP3" loop autoplay></audio>
 
-<button id="playMusicButton">Reproducir Música</button>
 <button id="btnLimpiar">🧹 Limpiar Flores</button>
 
 <div id="modalPregunta">
@@ -275,29 +274,34 @@
   let flores = [];
 
   const backgroundMusic = document.getElementById("backgroundMusic");
-  const playMusicButton = document.getElementById("playMusicButton"); // Referencia al nuevo botón
+  // CAMBIO: Se elimina la referencia al botón de música y su event listener
+  // const playMusicButton = document.getElementById("playMusicButton");
 
-  // Función para intentar reproducir la música
+  // CAMBIO: Se elimina la función tryPlayMusic y su lógica, el autoplay debería encargarse
+  /*
   function tryPlayMusic() {
     backgroundMusic.play().then(() => {
       console.log("Audio reproducido con éxito.");
       if (playMusicButton) {
-        playMusicButton.style.display = 'none'; // Oculta el botón si la reproducción es exitosa
+        playMusicButton.style.display = 'none';
       }
     }).catch(error => {
       console.log("Error al intentar reproducir el audio:", error);
       if (playMusicButton) {
-        playMusicButton.style.display = 'block'; // Asegura que el botón sea visible si falla el autoplay
+        playMusicButton.style.display = 'block';
       }
     });
   }
+  */
 
-  // Event listener para el nuevo botón de reproducción
+  // CAMBIO: Se elimina el event listener para el botón de música
+  /*
   if (playMusicButton) {
     playMusicButton.addEventListener("click", () => {
       tryPlayMusic();
     });
   }
+  */
 
   function crearPetalo(svg, cx, cy, rx, ry, fill, rot) {
     const path = document.createElementNS(ns, "path");
@@ -524,7 +528,7 @@
       // Se terminó el ciclo de confirmaciones, mostrar la carta
       modal.style.display = "none";
       modalCarta.style.display = "flex";
-      // La música ya no se intenta reproducir aquí, la maneja el botón "Reproducir Música"
+      // CAMBIO: Ya no hay botón de música, no es necesario hacer nada aquí con él.
     }
   });
 
@@ -554,12 +558,14 @@
 
   cerrarCartaBtn.addEventListener("click", () => {
     modalCarta.style.display = "none";
-    // Pausar la música si se cierra la carta
+    // CAMBIO: Pausar la música al cerrar la carta.
     backgroundMusic.pause();
-    // Asegurarse de que el botón de música sea visible de nuevo
+    // CAMBIO: Se elimina la lógica del botón de música
+    /*
     if (playMusicButton) {
         playMusicButton.style.display = 'block';
     }
+    */
     // Opcional: reiniciar confirmacion para que pueda repetir si quiere
     pasoActual = 0;
     preguntaTexto.textContent = confirmaciones[0];
@@ -570,13 +576,19 @@
     crearFiltroSombra();
     crearFlor(window.innerWidth / 2, window.innerHeight / 2);
     animar();
-    // La música NO se intenta reproducir al inicio. El usuario debe hacer clic en el botón.
+    // CAMBIO: Intentar reproducir música al inicio, confiando en que el navegador lo permita.
+    // La primera interacción con el modal o las flores podría "desbloquear" el autoplay.
+    backgroundMusic.play().catch(error => {
+        console.warn("Autoplay de audio bloqueado, es posible que el usuario necesite interactuar primero.");
+        // Si el autoplay falla aquí, no hay problema, ya que el usuario puede hacer clic en las flores.
+    });
   }
 
   window.onload = iniciar;
 
   document.body.addEventListener("click", e => {
-    if (e.target.id === "btnLimpiar" || e.target.closest("#modalPregunta") || e.target.closest("#modalCarta") || e.target.id === "playMusicButton") return;
+    // CAMBIO: Se eliminó la condición del botón de música
+    if (e.target.id === "btnLimpiar" || e.target.closest("#modalPregunta") || e.target.closest("#modalCarta")) return;
     crearFlor(e.clientX, e.clientY);
   });
 
