@@ -75,33 +75,16 @@
     border-radius: 8px;
     cursor: pointer;
     box-shadow: 0 4px 6px rgba(0,0,0,0.25);
-    /* CAMBIO: Z-index más alto para asegurar visibilidad */
-    z-index: 2001; 
+    /* AUMENTADO: Asegura que esté por encima de TODO */
+    z-index: 9999;
     user-select: none;
   }
   #btnLimpiar:hover {
     background: #ff1493;
   }
 
-  /* CAMBIO: Se eliminan los estilos del botón de música, ya no es necesario */
-  /* #playMusicButton {
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    font-size: 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.25);
-    z-index: 2001;
-    user-select: none;
-  }
-  #playMusicButton:hover {
-    background-color: #45a049;
-  } */
+  /* ELIMINADO: Se borra completamente el estilo del botón de música */
+  /* #playMusicButton { ... } */
 
 
   #modalPregunta {
@@ -145,7 +128,7 @@
     background: #dc3545;
     color: white;
     cursor: pointer;
-    position: fixed; /* para mover libremente */
+    position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -274,34 +257,10 @@
   let flores = [];
 
   const backgroundMusic = document.getElementById("backgroundMusic");
-  // CAMBIO: Se elimina la referencia al botón de música y su event listener
+  // ELIMINADO: No hay botón de música, así que estas variables y funciones ya no son necesarias.
   // const playMusicButton = document.getElementById("playMusicButton");
-
-  // CAMBIO: Se elimina la función tryPlayMusic y su lógica, el autoplay debería encargarse
-  /*
-  function tryPlayMusic() {
-    backgroundMusic.play().then(() => {
-      console.log("Audio reproducido con éxito.");
-      if (playMusicButton) {
-        playMusicButton.style.display = 'none';
-      }
-    }).catch(error => {
-      console.log("Error al intentar reproducir el audio:", error);
-      if (playMusicButton) {
-        playMusicButton.style.display = 'block';
-      }
-    });
-  }
-  */
-
-  // CAMBIO: Se elimina el event listener para el botón de música
-  /*
-  if (playMusicButton) {
-    playMusicButton.addEventListener("click", () => {
-      tryPlayMusic();
-    });
-  }
-  */
+  // function tryPlayMusic() { ... }
+  // if (playMusicButton) { ... }
 
   function crearPetalo(svg, cx, cy, rx, ry, fill, rot) {
     const path = document.createElementNS(ns, "path");
@@ -511,7 +470,6 @@
   const cerrarCartaBtn = modalCarta.querySelector(".cerrarCarta");
   const preguntaTexto = document.getElementById("preguntaTexto");
 
-  // Estados de confirmacion (los textos que quieres mostrar paso a paso)
   const confirmaciones = [
     "¿Quieres leer el mensaje?",
     "¿Estás segura?",
@@ -525,10 +483,8 @@
     if(pasoActual < confirmaciones.length) {
       preguntaTexto.textContent = confirmaciones[pasoActual];
     } else {
-      // Se terminó el ciclo de confirmaciones, mostrar la carta
       modal.style.display = "none";
       modalCarta.style.display = "flex";
-      // CAMBIO: Ya no hay botón de música, no es necesario hacer nada aquí con él.
     }
   });
 
@@ -537,17 +493,21 @@
 
   function moverBoton() {
     const contenedor = modal.querySelector("div");
-    const maxX = contenedor.clientWidth - btnNo.offsetWidth;
-    const maxY = contenedor.clientHeight - btnNo.offsetHeight;
-    btnNo.style.position = "absolute";
-    btnNo.style.left = Math.random() * maxX + "px";
-    btnNo.style.top = Math.random() * maxY + "px";
+    // Calcular límites para que el botón no se salga del modal
+    const rectContenedor = contenedor.getBoundingClientRect();
+    const rectBoton = btnNo.getBoundingClientRect();
 
-    // Sacudir el botón para que sea más evidente
+    let newLeft = Math.random() * (rectContenedor.width - rectBoton.width);
+    let newTop = Math.random() * (rectContenedor.height - rectBoton.height);
+
+    // Asegurarse de que el botón se mueva solo dentro del div del modal,
+    // y ajustar su posición relativa al contenedor
+    btnNo.style.left = `${newLeft}px`;
+    btnNo.style.top = `${newTop}px`;
+
     btnNo.classList.add("sacudir");
     setTimeout(() => btnNo.classList.remove("sacudir"), 400);
 
-    // Crear entre 3 y 6 flores aleatorias en pantalla
     const cantidad = 3 + Math.floor(Math.random() * 4);
     for (let i = 0; i < cantidad; i++) {
       const x = Math.random() * window.innerWidth;
@@ -558,15 +518,7 @@
 
   cerrarCartaBtn.addEventListener("click", () => {
     modalCarta.style.display = "none";
-    // CAMBIO: Pausar la música al cerrar la carta.
-    backgroundMusic.pause();
-    // CAMBIO: Se elimina la lógica del botón de música
-    /*
-    if (playMusicButton) {
-        playMusicButton.style.display = 'block';
-    }
-    */
-    // Opcional: reiniciar confirmacion para que pueda repetir si quiere
+    backgroundMusic.pause(); // Pausar la música al cerrar la carta
     pasoActual = 0;
     preguntaTexto.textContent = confirmaciones[0];
     modal.style.display = "flex";
@@ -576,19 +528,19 @@
     crearFiltroSombra();
     crearFlor(window.innerWidth / 2, window.innerHeight / 2);
     animar();
-    // CAMBIO: Intentar reproducir música al inicio, confiando en que el navegador lo permita.
-    // La primera interacción con el modal o las flores podría "desbloquear" el autoplay.
+    // La reproducción automática debería funcionar si hay interacción o si el navegador lo permite
     backgroundMusic.play().catch(error => {
-        console.warn("Autoplay de audio bloqueado, es posible que el usuario necesite interactuar primero.");
-        // Si el autoplay falla aquí, no hay problema, ya que el usuario puede hacer clic en las flores.
+        console.warn("Autoplay de audio bloqueado:", error);
     });
   }
 
   window.onload = iniciar;
 
   document.body.addEventListener("click", e => {
-    // CAMBIO: Se eliminó la condición del botón de música
-    if (e.target.id === "btnLimpiar" || e.target.closest("#modalPregunta") || e.target.closest("#modalCarta")) return;
+    // Se elimina la condición del botón de música
+    if (e.target.id === "btnLimpiar" || e.target.closest("#modalPregunta") || e.target.closest("#modalCarta")) {
+        return;
+    }
     crearFlor(e.clientX, e.clientY);
   });
 
