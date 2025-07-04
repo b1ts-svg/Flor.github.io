@@ -104,13 +104,19 @@
     max-width: 90vw;
   }
 
+  #modalBotones {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
   #btnSi, #btnNo {
     padding: 10px 20px;
     font-size: 16px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    margin: 10px;
+    margin: 0 10px;
     user-select: none;
   }
 
@@ -122,11 +128,8 @@
   #btnNo {
     background: #dc3545;
     color: white;
-    cursor: pointer;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    /* CAMBIO: Se remueve la posición fija y el transform inicial */
+    /* Esto se manejará dinámicamente en JS */
     transition: none !important;
   }
 
@@ -204,15 +207,17 @@
 </head>
 <body>
 
-<audio id="backgroundMusic" src="Stargirl.MP3" loop autoplay></audio>
+<audio id="backgroundMusic" src="Stargirl.MP3" loop></audio>
 
 <button id="btnLimpiar">🧹 Limpiar Flores</button>
 
 <div id="modalPregunta">
   <div>
     <h2 id="preguntaTexto">¿Quieres leer el mensaje?</h2>
-    <button id="btnSi">Sí</button>
-    <button id="btnNo">No</button>
+    <div id="modalBotones">
+      <button id="btnSi">Sí</button>
+      <button id="btnNo">No</button>
+    </div>
   </div>
 </div>
 
@@ -252,14 +257,17 @@
   let flores = [];
 
   const backgroundMusic = document.getElementById("backgroundMusic");
+  let musicStarted = false; // Controla si la música ya se intentó iniciar
 
-  // Función para intentar reproducir la música
   function tryPlayMusic() {
-    backgroundMusic.play().then(() => {
-      console.log("Audio reproducido con éxito.");
-    }).catch(error => {
-      console.warn("Error al intentar reproducir el audio (posiblemente bloqueado por el navegador):", error);
-    });
+    if (!musicStarted) {
+      backgroundMusic.play().then(() => {
+        console.log("Audio reproducido con éxito.");
+        musicStarted = true;
+      }).catch(error => {
+        console.warn("Error al intentar reproducir el audio (posiblemente bloqueado por el navegador):", error);
+      });
+    }
   }
 
   function crearPetalo(svg, cx, cy, rx, ry, fill, rot) {
@@ -465,6 +473,7 @@
   const modal = document.getElementById("modalPregunta");
   const btnSi = document.getElementById("btnSi");
   const btnNo = document.getElementById("btnNo");
+  const modalBotones = document.getElementById("modalBotones");
   const mensaje = document.getElementById("mensajeRevelado");
   const modalCarta = document.getElementById("modalCarta");
   const cerrarCartaBtn = modalCarta.querySelector(".cerrarCarta");
@@ -477,9 +486,21 @@
     "¿Estás pero muy segura de leer la carta?"
   ];
   let pasoActual = 0;
+  let firstInteractionDone = false; // Nuevo: Para controlar la primera interacción
+
+  // Listener para CUALQUIER clic dentro del modal para iniciar la música
+  modal.addEventListener("click", () => {
+    tryPlayMusic(); // Intenta reproducir la música con la primera interacción en el modal
+    if (!firstInteractionDone) {
+      firstInteractionDone = true;
+      // Solo después de la primera interacción, añadimos los listeners de movimiento al botón "No"
+      btnNo.addEventListener("mouseenter", moverBoton);
+      btnNo.addEventListener("mousemove", moverBoton);
+    }
+  });
+
 
   btnSi.addEventListener("click", () => {
-    tryPlayMusic(); // Intenta reproducir la música al hacer clic en "Sí"
     pasoActual++;
     if(pasoActual < confirmaciones.length) {
       preguntaTexto.textContent = confirmaciones[pasoActual];
@@ -489,18 +510,26 @@
     }
   });
 
-  btnNo.addEventListener("mouseenter", moverBoton);
-  btnNo.addEventListener("mousemove", moverBoton);
-
+  // La lógica de moverBoton se mantiene, pero solo se activa DESPUÉS de la primera interacción
   function moverBoton() {
-    tryPlayMusic(); // Intenta reproducir la música al interactuar con el botón "No"
-    const contenedor = modal.querySelector("div");
+    const contenedor = modal.querySelector("div"); // El div interno del modal
+    
+    // Para que el botón se mueva dentro del modal, necesitamos ajustar su estilo 'position' a 'absolute'
+    // y el contenedor del modal.querySelector('div') debe tener 'position: relative'
+    // Ya lo tiene 'position: relative', lo que es perfecto.
+    btnNo.style.position = "absolute"; 
+
+    // Calcular límites para que el botón no se salga del modal
     const rectContenedor = contenedor.getBoundingClientRect();
     const rectBoton = btnNo.getBoundingClientRect();
 
+    // Calculamos las posiciones aleatorias dentro del contenedor del modal.
+    // Restamos el tamaño del botón para que no se salga por la derecha o abajo.
     let newLeft = Math.random() * (rectContenedor.width - rectBoton.width);
     let newTop = Math.random() * (rectContenedor.height - rectBoton.height);
 
+    // Ajustamos la posición relativa al padre (el div del modal)
+    // Para esto, el `left` y `top` del botón se calculan desde el borde del `contenedor`.
     btnNo.style.left = `${newLeft}px`;
     btnNo.style.top = `${newTop}px`;
 
@@ -518,6 +547,18 @@
   cerrarCartaBtn.addEventListener("click", () => {
     modalCarta.style.display = "none";
     backgroundMusic.pause(); // Pausar la música al cerrar la carta
+    musicStarted = false; // Resetear el estado para que la música pueda volver a sonar
+
+    // Restablecer el botón "No" a su posición original (junto al "Sí")
+    btnNo.style.position = ""; // Elimina la posición absoluta
+    btnNo.style.left = "";    // Elimina el left
+    btnNo.style.top = "";     // Elimina el top
+    
+    // Se eliminan los listeners de movimiento del botón "No" para la próxima vez
+    btnNo.removeEventListener("mouseenter", moverBoton);
+    btnNo.removeEventListener("mousemove", moverBoton);
+    firstInteractionDone = false; // Resetear el estado de primera interacción
+
     pasoActual = 0;
     preguntaTexto.textContent = confirmaciones[0];
     modal.style.display = "flex";
@@ -527,7 +568,6 @@
     crearFiltroSombra();
     crearFlor(window.innerWidth / 2, window.innerHeight / 2);
     animar();
-    // No intentamos reproducir la música aquí, sino con la interacción del modal
   }
 
   window.onload = iniciar;
