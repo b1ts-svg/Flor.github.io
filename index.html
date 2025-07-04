@@ -75,14 +75,13 @@
     border-radius: 8px;
     cursor: pointer;
     box-shadow: 0 4px 6px rgba(0,0,0,0.25);
-    z-index: 9999; /* Asegura que esté por encima de TODO */
+    z-index: 9999;
     user-select: none;
   }
   #btnLimpiar:hover {
     background: #ff1493;
   }
 
-  /* Nuevo estilo para el contenedor del modal y el botón de música */
   #initialScreen {
     position: fixed;
     top: 0;
@@ -91,7 +90,7 @@
     height: 100%;
     background: rgba(0,0,0,0.6);
     display: flex;
-    flex-direction: column; /* Para apilar el modal y el botón */
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     z-index: 2000;
@@ -106,7 +105,7 @@
     position: relative;
     width: 300px;
     max-width: 90vw;
-    margin-bottom: 20px; /* Espacio entre el modal y el botón de música */
+    margin-bottom: 20px;
   }
 
   #modalBotones {
@@ -136,9 +135,8 @@
     transition: none !important;
   }
 
-  /* Estilo para el botón de reproducción de música cuando está debajo del modal */
   #playMusicButton {
-    background: #87ceeb; /* Un azul claro */
+    background: #87ceeb;
     color: white;
     border: none;
     padding: 10px 15px;
@@ -146,12 +144,12 @@
     border-radius: 8px;
     cursor: pointer;
     box-shadow: 0 4px 6px rgba(0,0,0,0.25);
-    z-index: 2001; /* Asegurarse de que esté por encima del fondo del modal */
+    z-index: 2001;
     user-select: none;
     transition: opacity 0.5s ease-out;
   }
   #playMusicButton:hover {
-    background: #6495ed; /* Un azul más oscuro al pasar el ratón */
+    background: #6495ed;
   }
 
   #mensajeRevelado {
@@ -183,7 +181,6 @@
     animation: sacudir 0.4s ease;
   }
 
-  /* Estilo carta modal */
   #modalCarta {
     position: fixed;
     top: 0; left: 0;
@@ -280,18 +277,17 @@
 
   const backgroundMusic = document.getElementById("backgroundMusic");
   const playMusicButton = document.getElementById("playMusicButton");
-  const initialScreen = document.getElementById("initialScreen"); // Nuevo elemento
-  let musicStarted = false; 
+  const initialScreen = document.getElementById("initialScreen");
+  let musicStarted = false;
 
   function tryPlayMusic() {
     if (!musicStarted) {
       backgroundMusic.play().then(() => {
         console.log("Audio reproducido con éxito.");
         musicStarted = true;
-        // Oculta el botón de reproducción de música una vez que empieza
         if (playMusicButton) {
           playMusicButton.style.opacity = "0";
-          setTimeout(() => playMusicButton.style.display = "none", 500); // Espera la transición
+          setTimeout(() => playMusicButton.style.display = "none", 500);
         }
       }).catch(error => {
         console.warn("Error al intentar reproducir el audio (posiblemente bloqueado por el navegador):", error);
@@ -299,7 +295,6 @@
     }
   }
 
-  // Listener para el botón de música
   if (playMusicButton) {
     playMusicButton.addEventListener("click", tryPlayMusic);
   }
@@ -520,16 +515,14 @@
     "¿Estás pero muy segura de leer la carta?"
   ];
   let pasoActual = 0;
-  let firstModalInteractionDone = false; 
 
-  // Listener para CUALQUIER clic dentro del modal para activar el movimiento del botón "No"
-  // Ya no es necesario que inicie la música aquí, pues el botón de música lo hará
+  // Los listeners para el movimiento del botón "No" se activan siempre
+  btnNo.addEventListener("mouseenter", moverBoton);
+  btnNo.addEventListener("mousemove", moverBoton);
+
+  // El listener del modal ya no necesita iniciar la música
   modal.addEventListener("click", () => {
-    if (!firstModalInteractionDone) {
-      firstModalInteractionDone = true;
-      btnNo.addEventListener("mouseenter", moverBoton);
-      btnNo.addEventListener("mousemove", moverBoton);
-    }
+    // No hace nada para la música aquí, ya que el botón de música la maneja
   });
 
   btnSi.addEventListener("click", () => {
@@ -537,23 +530,20 @@
     if(pasoActual < confirmaciones.length) {
       preguntaTexto.textContent = confirmaciones[pasoActual];
     } else {
-      initialScreen.style.display = "none"; // Oculta toda la pantalla inicial
+      initialScreen.style.display = "none";
       modalCarta.style.display = "flex";
     }
   });
 
   function moverBoton() {
     const contenedor = modal.querySelector("div");
-    btnNo.style.position = "absolute"; 
+    btnNo.style.position = "absolute";
 
     const rectContenedor = contenedor.getBoundingClientRect();
     const rectBoton = btnNo.getBoundingClientRect();
 
     let newLeft = Math.random() * (rectContenedor.width - rectBoton.width);
     let newTop = Math.random() * (rectContenedor.height - rectBoton.height);
-
-    newLeft = newLeft - (rectBoton.left - rectContenedor.left);
-    newTop = newTop - (rectBoton.top - rectContenedor.top);
 
     btnNo.style.left = `${newLeft}px`;
     btnNo.style.top = `${newTop}px`;
@@ -572,21 +562,17 @@
   cerrarCartaBtn.addEventListener("click", () => {
     modalCarta.style.display = "none";
     backgroundMusic.pause();
-    musicStarted = false; 
+    musicStarted = false;
 
-    // Restablecer el botón "No" y el estado de la pantalla inicial
-    btnNo.style.position = ""; 
-    btnNo.style.left = "";    
-    btnNo.style.top = "";     
-    
-    btnNo.removeEventListener("mouseenter", moverBoton);
-    btnNo.removeEventListener("mousemove", moverBoton);
-    firstModalInteractionDone = false; 
+    // Restaurar el botón "No" a su posición original
+    btnNo.style.position = "";
+    btnNo.style.left = "";
+    btnNo.style.top = "";
 
     pasoActual = 0;
     preguntaTexto.textContent = confirmaciones[0];
-    initialScreen.style.display = "flex"; // Vuelve a mostrar la pantalla inicial
-    playMusicButton.style.display = "block"; // Muestra de nuevo el botón de música
+    initialScreen.style.display = "flex";
+    playMusicButton.style.display = "block";
     playMusicButton.style.opacity = "1";
   });
 
@@ -599,11 +585,11 @@
   window.onload = iniciar;
 
   document.body.addEventListener("click", e => {
-    // Si la pantalla inicial (modal + botón de música) está visible, y el clic no fue en esa pantalla, no crees flores
-    if (initialScreen.style.display !== "none" && !e.target.closest("#initialScreen") && e.target.id !== "btnLimpiar") {
+    // Si la pantalla inicial está visible, solo crea flores si el clic no es en un elemento del modal o el botón de música
+    if (initialScreen.style.display !== "none" && (e.target.closest("#initialScreen") || e.target.id === "btnLimpiar")) {
         return;
     }
-    // Si la pantalla inicial no está visible (ya la cerró), entonces sí crea flores al clic
+    // Si la pantalla inicial no está visible (es decir, ya se cerró), crea flores en cualquier clic excepto el botón de limpiar
     if (initialScreen.style.display === "none" && e.target.id !== "btnLimpiar") {
         crearFlor(e.clientX, e.clientY);
     }
